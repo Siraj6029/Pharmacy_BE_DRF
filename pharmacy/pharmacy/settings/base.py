@@ -42,6 +42,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # External Packages
     "rest_framework",
+    "rest_framework_simplejwt",
+    # Apps
+    "pharmacy.product",
 ]
 
 MIDDLEWARE = [
@@ -117,4 +120,10 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-REST_FRAMEWORK = {}
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.SessionAuthentication",  # Session authentication for browser-based clients
+        "rest_framework_simplejwt.authentication.JWTAuthentication",  # Token authentication for non-browser clients
+    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+}

@@ -10,3 +10,4 @@ black==24.4.2
 flake8==7.0.0
 django-mptt==0.16.0
 rf-spectacular==0.27.2
+djangorestframework_simplejwt-5.3.1
