@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     # Apps
     "pharmacy.product",
     "pharmacy.core",
+    "pharmacy.user",
 ]
 
 MIDDLEWARE = [
