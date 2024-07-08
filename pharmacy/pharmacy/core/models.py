@@ -2,7 +2,7 @@ from django.db import models
 
 
 class Company(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     address = models.CharField(max_length=255, null=True, blank=True)
     contact_number = models.CharField(max_length=15, default=None, blank=True)
 
@@ -11,7 +11,7 @@ class Company(models.Model):
 
 
 class Formula(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     description = models.TextField(null=True, blank=True)
 
     def __str__(self):
@@ -19,7 +19,7 @@ class Formula(models.Model):
 
 
 class Distribution(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     address = models.CharField(max_length=255, null=True, blank=True)
     contact_number = models.CharField(max_length=15, null=True, blank=True)
 

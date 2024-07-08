@@ -16,7 +16,7 @@ class Product(models.Model):
     #     ("OTH", "Others"),
     # ]
 
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     company = models.ForeignKey(
         Company, on_delete=models.SET_NULL, null=True, related_name="products"
     )
