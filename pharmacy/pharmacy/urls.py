@@ -19,10 +19,14 @@ from django.contrib import admin
 from django.urls import path, include
 from pharmacy.user import urls as user_urls
 from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
+from pharmacy.core import urls as core_urls
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("user/", include(user_urls)),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    # Company
+    path("", include(core_urls)),
 ]
