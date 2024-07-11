@@ -20,6 +20,7 @@ from django.urls import path, include
 from pharmacy.user import urls as user_urls
 from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
 from pharmacy.core import urls as core_urls
+from pharmacy.product import urls as product_urls
 
 
 urlpatterns = [
@@ -29,4 +30,5 @@ urlpatterns = [
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     # Company
     path("", include(core_urls)),
+    path("", include(product_urls)),
 ]

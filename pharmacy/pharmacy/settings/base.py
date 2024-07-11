@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     # External Packages
     "rest_framework",
     "rest_framework_simplejwt",
+    "django_filters",
     # Apps
     "pharmacy.product",
     "pharmacy.core",
@@ -128,4 +129,5 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",  # Token authentication for non-browser clients
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
 }

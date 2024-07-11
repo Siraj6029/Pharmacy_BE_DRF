@@ -1,6 +1,7 @@
 from django.db import models
 from pharmacy.core.models import Company, Formula, Distribution
 from .choices import ProductTypeChoices
+from django.db.models import Sum
 
 
 class Product(models.Model):
@@ -32,10 +33,23 @@ class Product(models.Model):
     )
     avg_qty = models.IntegerField()
     per_pack = models.IntegerField(default=1)
-    desctiption = models.TextField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return self.name
+
+
+class ProductProxy(Product):
+    class Meta:
+        proxy = True
+        ordering = ["name"]
+
+    def __str__(self):
+        return f"Proxy: {self.name}"
+
+    @property
+    def total_qty(self):
+        return self.stocks.aggregate(total_qty=Sum("qty"))["total_qty"] or 0
 
 
 class Stock(models.Model):
