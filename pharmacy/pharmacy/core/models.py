@@ -25,3 +25,9 @@ class Distribution(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Customer(models.Model):
+    name = models.CharField(max_length=128)
+    address = models.CharField(max_length=255, null=True, blank=True)
+    contact_number = models.CharField(max_length=15, default=None, null=True)

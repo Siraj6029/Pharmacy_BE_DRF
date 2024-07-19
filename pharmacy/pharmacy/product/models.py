@@ -1,21 +1,12 @@
 from django.db import models
-from pharmacy.core.models import Company, Formula, Distribution
+from pharmacy.core.models import Company, Formula, Distribution, Customer
 from .choices import ProductTypeChoices
 from django.db.models import Sum
+from django.utils import timezone
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Product(models.Model):
-    # PRODUCT_TYPE_CHOICES = [
-    #     ("TAB", "Tablets"),
-    #     ("SYP", "Syrup"),
-    #     ("CR", "Cream"),
-    #     ("CAP", "Capsule"),
-    #     ("INJ", "Injection"),
-    #     ("DRO", "Drops"),
-    #     ("DRI", "Drips"),
-    #     ("SEC", "Sechet"),
-    #     ("OTH", "Others"),
-    # ]
 
     name = models.CharField(max_length=255, unique=True)
     company = models.ForeignKey(
@@ -53,7 +44,7 @@ class ProductProxy(Product):
 
 
 class Stock(models.Model):
-    qty = models.IntegerField()
+    qty = models.IntegerField(validators=[MinValueValidator(0)])
     product = models.ForeignKey(
         Product, related_name="stocks", on_delete=models.CASCADE
     )
@@ -61,4 +52,39 @@ class Stock(models.Model):
     entry_date = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.product.name} - {self.qty}"
+        return f"{self.id} - {self.product.name} - {self.qty}"
+
+
+class Order(models.Model):
+    customer = models.ForeignKey(
+        Customer, related_name="orders", on_delete=models.SET_NULL, null=True
+    )
+    date = models.DateTimeField(default=timezone.now)
+    discount = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(12)],
+        null=True,
+        default=None,
+    )
+    total_amount = models.DecimalField(max_digits=99999, decimal_places=2, null=True)
+    status = models.CharField(
+        choices=[
+            ("Pending", "Pending"),
+            ("Completed", "Completed"),
+            ("Cancelled", "Cancelled"),
+        ],
+        max_length=9,
+        default="Completed",
+    )
+    stocks = models.ManyToManyField(Stock, through="StockOrder", related_name="orders")
+
+    def __str__(self):
+        return f"{self.stocks}"
+
+
+class StockOrder(models.Model):
+    stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    quantity = models.IntegerField(validators=[MinValueValidator(1)])
+
+    def __str__(self):
+        return f"StockOrder {self.id} - Order {self.order.id} - Stock {self.stock.id}"
