@@ -35,7 +35,8 @@ class StockOrderCreateSerializer(serializers.ModelSerializer):
 
 class StockOrderSerializer(serializers.ModelSerializer):
     product = serializers.ReadOnlyField(source="stock.product.name")
-    price_per_unit = serializers.ReadOnlyField(source="stock.product.price_per_unit")
+    # price_per_unit = serializers.ReadOnlyField(source="stock.product.price_per_unit")
+    price_per_unit = serializers.ReadOnlyField(source="stock.price_per_unit")
 
     class Meta:
         model = StockOrder
@@ -45,6 +46,9 @@ class StockOrderSerializer(serializers.ModelSerializer):
 class OrderCreateSerializer(serializers.ModelSerializer):
     stock_order = StockOrderCreateSerializer(many=True)
     total_amount = serializers.DecimalField(
+        max_digits=99999, decimal_places=2, read_only=True
+    )
+    total_after_disc = serializers.DecimalField(
         max_digits=99999, decimal_places=2, read_only=True
     )
 
@@ -66,14 +70,17 @@ class OrderCreateSerializer(serializers.ModelSerializer):
                 )
             StockOrder.objects.create(stock=stock, quantity=quantity, order=order)
 
-            total_amount += stock.product.price_per_unit * quantity
+            total_amount += stock.price_per_unit * quantity
 
             stock.qty -= quantity
             stock.save()
 
         if order.discount:
-            total_amount = total_amount * ((100 - order.discount) / 100)
+            total_after_disc = total_amount * ((100 - order.discount) / 100)
+        else:
+            total_after_disc = total_amount
         order.total_amount = total_amount
+        order.total_after_disc = total_after_disc
         order.save()
         return order
 
@@ -85,3 +92,9 @@ class OrderDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = "__all__"
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = "__all__"  # Alternatively, you can list specific fields

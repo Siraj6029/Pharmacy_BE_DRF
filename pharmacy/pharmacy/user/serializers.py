@@ -18,7 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
             "is_superuser",
         ]
         extra_kwargs = {
-            "password": {"write_only": True, "required": True},
+            "password": {"write_only": True, "required": False},
             "id": {"read_only": True},
             "username": {"required": True},
         }
@@ -27,13 +27,16 @@ class UserSerializer(serializers.ModelSerializer):
     is_superuser = serializers.BooleanField(default=False)
 
     def create(self, validated_data: dict):
+        if not validated_data.get("password"):
+            raise ValidationError("Password field is required.")
         user = User.objects.create_user(**validated_data)
         return user
 
-    def update(self, instance: User, validated_data: dict):
-        # if "username" in validated_data:
-        #     raise ValidationError({"username": "username cannot be updated."})
+    def update(self, instance, validated_data):
+        password = validated_data.pop("password", None)
         validated_data.pop("username", None)
+
+        # Update other user fields
         instance.email = validated_data.get("email", instance.email)
         instance.first_name = validated_data.get("first_name", instance.first_name)
         instance.last_name = validated_data.get("last_name", instance.last_name)
@@ -41,8 +44,9 @@ class UserSerializer(serializers.ModelSerializer):
         instance.is_superuser = validated_data.get(
             "is_superuser", instance.is_superuser
         )
-        password = validated_data.get("password", None)
+
         if password:
-            instance.set_password(password)
+            instance.set_password(password)  # If password is provided, update it
+
         instance.save()
         return instance

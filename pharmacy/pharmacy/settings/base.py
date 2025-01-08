@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "django_filters",
+    "corsheaders",
     # Apps
     "pharmacy.product",
     "pharmacy.core",
@@ -58,6 +59,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
 ]
 
 ROOT_URLCONF = "pharmacy.urls"
@@ -131,3 +133,28 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
 }
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Allow React app running on localhost:3000
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+# Optionally, specify allowed headers (if you're sending custom headers like Authorization)
+CORS_ALLOW_HEADERS = [
+    "content-type",
+    "authorization",  # Make sure Authorization is allowed
+    # You can add other headers as needed
+]
+
+# Allow specific methods (e.g., POST, GET, etc.)
+CORS_ALLOWED_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "DELETE",
+    "OPTIONS",
+    "PATCH",
+]
+
+APPEND_SLASH = False

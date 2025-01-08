@@ -11,13 +11,14 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Prefetch
 from rest_framework import filters, status
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 from django.db import transaction
 from rest_framework.request import Request
 from rest_framework.response import Response
 from .models import Order, Product
 
 
-class ProductDetailView(ListAPIView):
+class ProductViewSet(ModelViewSet):
     queryset = ProductProxy.objects.select_related(
         "company", "distribution", "formula"
     ).prefetch_related(Prefetch("stocks", queryset=Stock.objects.filter(qty__gt=0)))
@@ -25,6 +26,8 @@ class ProductDetailView(ListAPIView):
     serializer_class = ProductDetailSerializer
     filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
     filterset_class = ProductFilter
+    ordering_fields = ["name", "total_qty", "product_type"]
+    ordering = ["name"]
 
 
 class OrderCreateAPIView(APIView):
@@ -33,7 +36,6 @@ class OrderCreateAPIView(APIView):
         serializer = OrderCreateSerializer(data=request.data)
         if serializer.is_valid():
             order: Order = serializer.save()
-            breakpoint()
             receipt_serializer = OrderDetailSerializer(order)
             return Response(receipt_serializer.data, status=status.HTTP_201_CREATED)
 

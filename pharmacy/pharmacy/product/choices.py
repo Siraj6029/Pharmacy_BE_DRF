@@ -1,12 +1,17 @@
 class ProductTypeChoices:
     TAB = "TAB", "Tablets"
     SYP = "SYP", "Syrup"
-    CR = "CR", "Cream"
+    CREAM = "CREAM", "Cream"
     CAP = "CAP", "Capsule"
     INJ = "INJ", "Injection"
-    DRO = "DRO", "Drops"
-    DRI = "DRI", "Drips"
-    SEC = "SEC", "Sechet"
+    DROPS = "DROPS", "Drops"
+    DRIP = "DRIP", "Drips"
+    SECHET = "SECHET", "Sechet"
+    SAOP = "SAOP", "Saop"
+    TP = "T/PASTE", "T/Paste"
+    Ointment = "OINTMENT", "Ointment"
+    Lotion = "LOTION", "Lotion"
+    B_Cream = "B/CREAM", "B/Cream"
     OTH = "OTH", "Others"
 
     @classmethod
@@ -14,11 +19,16 @@ class ProductTypeChoices:
         return (
             cls.TAB,
             cls.SYP,
-            cls.CR,
+            cls.CREAM,
             cls.CAP,
             cls.INJ,
-            cls.DRO,
-            cls.DRI,
-            cls.SEC,
+            cls.DROPS,
+            cls.DRIP,
+            cls.SECHET,
+            cls.SAOP,
+            cls.TP,
+            cls.Ointment,
+            cls.Lotion,
+            cls.B_Cream,
             cls.OTH,
         )

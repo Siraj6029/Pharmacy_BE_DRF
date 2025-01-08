@@ -1,8 +1,9 @@
 import django_filters
 from .models import Product, ProductProxy
 from django.utils import timezone
-from django.db.models import QuerySet
+from django.db.models import QuerySet, F, Case, When, Value, BooleanField, Q
 from datetime import timedelta
+from pharmacy.utills.enums import ExpiryEnum
 
 
 class ProductFilter(django_filters.FilterSet):
@@ -22,18 +23,40 @@ class ProductFilter(django_filters.FilterSet):
 
     def filter_by_company_ids(self, queryset: QuerySet, name: str, value: str):
         company_ids = value.split(",")
+        if not all(c_id.isdigit() for c_id in company_ids):
+            raise ValueError("All company IDs must be numeric.")
         return queryset.filter(company__id__in=company_ids)
 
     def filter_expiration(self, queryset: QuerySet, name: str, value: bool):
+        if value not in ExpiryEnum.list_all_values():
+            raise ValueError(
+                f"Invalid expiration value. allowed values are: {ExpiryEnum.list_all_values()}"
+            )
         today = timezone.now().date()
-        if value == "expired":
-            return queryset.filter(stocks__expiry_date__lt=today).distinct()
-        elif value == "shortExpired":
-            six_month_later = today + timedelta(days=180)
+        six_months_later = today + timedelta(days=180)
+
+        queryset = queryset.annotate(
+            is_expired=Case(
+                When(stocks__expiry_date__lt=Value(today), then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField(),
+            ),
+            is_short_expired=Case(
+                When(
+                    stocks__expiry_date__gte=Value(today),
+                    stocks__expiry_date__lt=Value(six_months_later),
+                    then=(Value(True)),
+                ),
+                default=Value(False),
+                output_field=BooleanField(),
+            ),
+        )
+
+        if value == ExpiryEnum.EXPIRED.value:
+            return queryset.filter(is_expired=True).distinct()
+        elif value == ExpiryEnum.SHORT_EXPIRED.value:
+            return queryset.filter(is_short_expired=True).distinct()
+        elif value == ExpiryEnum.EXPIRED_AND_SHORT_EXPIRED.value:
             return queryset.filter(
-                stocks__expiry_date__gt=today, stocks__expiry_date__lt=six_month_later
+                Q(is_expired=True) | Q(is_short_expired=True)
             ).distinct()
-        elif value == "expiredAndShortExpired":
-            six_months_later = today + timedelta(days=180)
-            return queryset.filter(stocks__expiry_date__lt=six_months_later)
-        return queryset
