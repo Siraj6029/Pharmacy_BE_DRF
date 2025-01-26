@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Product, Stock, ProductProxy, StockOrder, Order
+from .models import Product, Stock, StockOrder, Order
+from pharmacy.core.models import Company, Distribution, Formula
 from pharmacy.core.serializers import (
     CompanySerializer,
     DistributionSerializer,
@@ -13,18 +14,44 @@ class StockSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stock
         fields = "__all__"
+        read_only_fields = ["id", "stocks"]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["bought_from"] = instance.bought_from.name
+        return data
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):
+    company_id = serializers.PrimaryKeyRelatedField(
+        queryset=Company.objects.all(), source="company", write_only=True
+    )
+    distribution_id = serializers.PrimaryKeyRelatedField(
+        queryset=Distribution.objects.all(),
+        source="distribution",
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    formula_id = serializers.PrimaryKeyRelatedField(
+        queryset=Formula.objects.all(), source="formula", write_only=True
+    )
+
     company = CompanySerializer(read_only=True)
     distribution = DistributionSerializer(read_only=True)
     formula = FormulaSerializer(read_only=True)
-    stocks = StockSerializer(many=True)
+    stocks = StockSerializer(many=True, required=False, read_only=True)
     total_qty = serializers.IntegerField(read_only=True)
 
     class Meta:
-        model = ProductProxy
+        model = Product  # changed from ProductProxy
         fields = "__all__"
+        extra_kwargs = {
+            # "password": {"write_only": True, "required": False},
+            "stocks": {"read_only": True, "required": False},
+            "distribution_id": {"required": False},
+            # "username": {"required": True},
+        }
 
 
 class StockOrderCreateSerializer(serializers.ModelSerializer):

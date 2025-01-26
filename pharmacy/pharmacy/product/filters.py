@@ -1,24 +1,29 @@
 import django_filters
-from .models import Product, ProductProxy
+from .models import Product
 from django.utils import timezone
-from django.db.models import QuerySet, F, Case, When, Value, BooleanField, Q
+from django.db.models import QuerySet, F, Case, When, Value, BooleanField, Q, F, Sum
 from datetime import timedelta
-from pharmacy.utills.enums import ExpiryEnum
+from pharmacy.utills.enums import ExpiryEnum, LowQuantityEnums, LowQuantityThresholEnum
+from django.db.models.functions import Coalesce
+from datetime import date
 
 
 class ProductFilter(django_filters.FilterSet):
     expiration = django_filters.CharFilter(method="filter_expiration")
     company_ids = django_filters.CharFilter(method="filter_by_company_ids")
+    distribution_ids = django_filters.CharFilter(method="filter_by_distribution_ids")
+    formula_ids = django_filters.CharFilter(method="filter_by_formula_ids")
+    low_qty = django_filters.CharFilter(method="filter_low_qty")
 
     class Meta:
-        model = ProductProxy
+        model = Product  # changed from ProductProxy
         fields = {
             "id": ["exact"],
             "name": ["exact", "icontains"],
             "product_type": ["exact"],
-            "company__name": ["exact", "icontains"],
-            "distribution__name": ["exact", "icontains"],
-            "formula__name": ["exact", "icontains"],
+            # "company__name": ["exact", "icontains"],
+            # "distribution__name": ["exact", "icontains"],
+            # "formula__name": ["exact", "icontains"],
         }
 
     def filter_by_company_ids(self, queryset: QuerySet, name: str, value: str):
@@ -27,7 +32,20 @@ class ProductFilter(django_filters.FilterSet):
             raise ValueError("All company IDs must be numeric.")
         return queryset.filter(company__id__in=company_ids)
 
-    def filter_expiration(self, queryset: QuerySet, name: str, value: bool):
+    def filter_by_distribution_ids(self, queryset: QuerySet, name: str, value: str):
+        distribution_ids = value.split(",")
+        if not all(c_id.isdigit() for c_id in distribution_ids):
+            raise ValueError("All company IDs must be numeric.")
+        return queryset.filter(distribution__id__in=distribution_ids)
+
+    def filter_by_formula_ids(self, queryset: QuerySet, name: str, value: str):
+        print(value)
+        formula_ids = value.split(",")
+        if not all(c_id.isdigit() for c_id in formula_ids):
+            raise ValueError("All company IDs must be numeric.")
+        return queryset.filter(formula__id__in=formula_ids)
+
+    def filter_expiration(self, queryset: QuerySet, name: str, value: str):
         if value not in ExpiryEnum.list_all_values():
             raise ValueError(
                 f"Invalid expiration value. allowed values are: {ExpiryEnum.list_all_values()}"
@@ -60,3 +78,35 @@ class ProductFilter(django_filters.FilterSet):
             return queryset.filter(
                 Q(is_expired=True) | Q(is_short_expired=True)
             ).distinct()
+
+    def filter_low_qty(self, queryset: QuerySet, name: str, value: str):
+        if value not in LowQuantityEnums.list_all_values():
+            raise ValueError(
+                f"Invalid low_qty value. Allowed values are: {LowQuantityEnums.list_all_values()}"
+            )
+
+        # Get today's date to filter out expired stocks
+        today = date.today()
+
+        # Annotate total quantity, excluding expired stocks
+        queryset = queryset.annotate(
+            total_quantity=Coalesce(
+                Sum(
+                    "stocks__qty", filter=Q(stocks__expiry_date__gte=today)
+                ),  # Only include non-expired stocks
+                Value(0),
+            )
+        )
+
+        if value == LowQuantityEnums.VERY_LOW.value:
+            return queryset.filter(
+                total_quantity__lt=F("avg_qty")
+                * LowQuantityThresholEnum.VERY_LOW_LIMIT.value
+            ).distinct()
+        elif value == LowQuantityEnums.LOW.value:
+            return queryset.filter(
+                total_quantity__lt=F("avg_qty")
+                * LowQuantityThresholEnum.LOW_LIMIT.value
+            ).distinct()
+
+        return queryset

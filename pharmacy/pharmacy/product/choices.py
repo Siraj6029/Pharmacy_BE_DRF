@@ -9,9 +9,10 @@ class ProductTypeChoices:
     SECHET = "SECHET", "Sechet"
     SAOP = "SAOP", "Saop"
     TP = "T/PASTE", "T/Paste"
-    Ointment = "OINTMENT", "Ointment"
-    Lotion = "LOTION", "Lotion"
-    B_Cream = "B/CREAM", "B/Cream"
+    OINTMENT = "OINTMENT", "Ointment"
+    LOTION = "LOTION", "Lotion"
+    B_CREAM = "B/CREAM", "B/Cream"
+    INHALER = "INHALER", "INHALER"
     OTH = "OTH", "Others"
 
     @classmethod
@@ -27,8 +28,8 @@ class ProductTypeChoices:
             cls.SECHET,
             cls.SAOP,
             cls.TP,
-            cls.Ointment,
-            cls.Lotion,
-            cls.B_Cream,
+            cls.OINTMENT,
+            cls.LOTION,
+            cls.B_CREAM,
             cls.OTH,
         )

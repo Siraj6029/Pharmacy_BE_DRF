@@ -11,10 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
+from ..config import TZ, DBG
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -28,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-pl=&s$ieoee8bxod0o(3@xj__ku@2!otbdk(e67v@9xbubbv85"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = DBG
 
 
 # Application definition
@@ -107,11 +104,14 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+# TIME_ZONE = "UTC"
 
 USE_I18N = True
 
-USE_TZ = True
+# USE_TZ = True
+
+TIME_ZONE = TZ
+USE_TZ = True  # Enable time zone support
 
 
 # Static files (CSS, JavaScript, Images)
