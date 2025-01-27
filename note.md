@@ -11,3 +11,5 @@ flake8==7.0.0
 django-mptt==0.16.0
 rf-spectacular==0.27.2
 djangorestframework_simplejwt-5.3.1
+django-filter==24.2
+python-barcode==0.15.1
