@@ -14,6 +14,7 @@ class ProductFilter(django_filters.FilterSet):
     distribution_ids = django_filters.CharFilter(method="filter_by_distribution_ids")
     formula_ids = django_filters.CharFilter(method="filter_by_formula_ids")
     low_qty = django_filters.CharFilter(method="filter_low_qty")
+    showInactive = django_filters.BooleanFilter(method="filter_show_inactive")
 
     class Meta:
         model = Product  # changed from ProductProxy
@@ -110,3 +111,8 @@ class ProductFilter(django_filters.FilterSet):
             ).distinct()
 
         return queryset
+
+    def filter_show_inactive(self, queryset: QuerySet, name: str, value: bool):
+        if value:
+            return queryset
+        return queryset.filter(avg_qty__gt=0)

@@ -9,6 +9,7 @@ from barcode import Code128
 from barcode.errors import BarcodeError
 from django.core.exceptions import ValidationError
 from datetime import date
+from ..config import LOW_QTY_THRESHOLD
 
 
 class Product(models.Model):
@@ -31,19 +32,6 @@ class Product(models.Model):
     market_item = models.BooleanField(default=True)
     description = models.TextField(null=True, blank=True)
 
-    # @property
-    # def total_qty(self):
-    #     # Get today's date
-    #     today = date.today()
-
-    #     # Exclude expired stocks (where expiry_date is less than today's date)
-    #     return (
-    #         self.stocks.filter(expiry_date__gt=today).aggregate(total_qty=Sum("qty"))[
-    #             "total_qty"
-    #         ]
-    #         or 0
-    #     )
-
     @property
     def total_qty(self):
         # Get today's date
@@ -52,12 +40,71 @@ class Product(models.Model):
         # Include stocks where expiry_date is null, 0, or greater than today's date
         return (
             self.stocks.filter(
-                Q(expiry_date__gte=today)
-                | Q(expiry_date__isnull=True)
-                # | Q(expiry_date=0)
+                Q(expiry_date__gte=today) | Q(expiry_date__isnull=True)
             ).aggregate(total_qty=Sum("qty"))["total_qty"]
             or 0
         )
+
+    @property
+    def total_qty_expired(self):
+        # Get today's date
+        today = date.today()
+
+        # Include stocks where expiry_date is less than today's date
+        return (
+            self.stocks.filter(expiry_date__lt=today).aggregate(total_qty=Sum("qty"))[
+                "total_qty"
+            ]
+            or 0
+        )
+
+    @property
+    def total_qty_short_expired(self):
+        # Get today's date
+        today = date.today()
+        six_months_later = today + timezone.timedelta(days=180)
+
+        # Include stocks where expiry_date is less than today's date
+        return (
+            self.stocks.filter(
+                expiry_date__gte=today, expiry_date__lt=six_months_later
+            ).aggregate(total_qty=Sum("qty"))["total_qty"]
+            or 0
+        )
+
+    @property
+    def total_qty_expired_and_short_expired(self):
+        # Get today's date
+        today = date.today()
+        six_months_later = today + timezone.timedelta(days=180)
+
+        # Include stocks where expiry_date is less than today's date
+        return (
+            self.stocks.filter(expiry_date__lt=six_months_later).aggregate(
+                total_qty=Sum("qty")
+            )["total_qty"]
+            or 0
+        )
+
+    @property
+    def is_active(self):
+        return self.avg_qty > 0
+
+    @property
+    def required_qty(self):
+        rqd_qty = self.avg_qty - self.total_qty
+        if rqd_qty < 0:
+            return 0
+        return rqd_qty
+
+    @property
+    def required_low_qty(self):
+        if self.avg_qty < 5:
+            return self.required_qty
+        rqd_qty = int((self.avg_qty * LOW_QTY_THRESHOLD) - self.total_qty)
+        if rqd_qty < 0:
+            return 0
+        return rqd_qty
 
     def __str__(self):
         return self.name
@@ -87,6 +134,22 @@ class Stock(models.Model):
     bought_from = models.ForeignKey(
         Distribution, related_name="stock", on_delete=models.SET_NULL, null=True
     )
+
+    @property
+    def total_price(self):
+        return self.qty * self.price_per_unit
+
+    @property
+    def total_purchase_price(self):
+        return self.qty * self.perchase_price
+
+    @property
+    def total_profit(self):
+        return self.total_price - self.total_purchase_price
+
+    @property
+    def total_profit_percent(self):
+        return (self.total_profit / self.total_purchase_price) * 100
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

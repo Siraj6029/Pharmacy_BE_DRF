@@ -6,3 +6,4 @@ load_dotenv()
 
 DBG = os.getenv("DEBUG") == "True"
 TZ = os.getenv("TIME_ZONE", "UTC")
+LOW_QTY_THRESHOLD = 0.8
