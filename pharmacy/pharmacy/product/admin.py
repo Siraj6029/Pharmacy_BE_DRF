@@ -1,7 +1,14 @@
 from django.contrib import admin
-from .models import Product, Stock, StockOrder, Order
+from .models import (
+    Product,
+    Stock,
+    StockOrder,
+    Order,
+    DistributionTransaction,
+    CustomerTransaction,
+)
 
-admin.site.register((Product, Stock))
+admin.site.register((Product, Stock, DistributionTransaction, CustomerTransaction))
 
 
 class StockOrderInline(admin.TabularInline):

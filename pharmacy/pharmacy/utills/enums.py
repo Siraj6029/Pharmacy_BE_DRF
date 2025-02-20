@@ -6,6 +6,10 @@ class ExtendedEnum(Enum):
     def list_all_values(cls):
         return list(map(lambda x: x.value, cls))
 
+    @classmethod
+    def choices(cls):
+        return [(key.value, key.name.replace("_", " ").title()) for key in cls]
+
 
 class ExpiryEnum(ExtendedEnum):
     EXPIRED = "expired"
@@ -27,3 +31,26 @@ class LowQuantityThresholEnum(ExtendedEnum):
 
     def __repr__(self):
         return self.value
+
+
+class TransactionType(ExtendedEnum):
+    PAYMENT_RECEIVED = "payment_received"
+    PAYMENT_MADE = "payment_made"
+    PRODUCTS_RECIEVED = "products_recieved"
+
+
+class DiscrepancyTypeEnum(ExtendedEnum):
+    HOME_EXPENSE = "home_expense"
+    FREE = "free"
+    LOST = "lost"
+    DAMAGED = "damaged"
+    EXPIRED = "expired"
+    DONATED = "donated"
+    RETURNED_SHORT_EXPIRY = "returned_shortExpiry"
+    RECOVERED_CASH_APPROVAL = "recovered_cash_approval"
+
+
+class OrderStatusEnum(ExtendedEnum):
+    PENDING = "Pending"
+    COMPLETED = "Completed"
+    CANCELLED = "Cancelled"

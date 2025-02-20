@@ -31,5 +31,6 @@ class ProductTypeChoices:
             cls.OINTMENT,
             cls.LOTION,
             cls.B_CREAM,
+            cls.INHALER,
             cls.OTH,
         )
